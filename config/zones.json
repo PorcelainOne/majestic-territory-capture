@@ -1,0 +1,26 @@
+{
+  "defaults": {
+    "capture": {
+      "threshold": 100,
+      "gainByPlayers": [10, 15, 18],
+      "decayPerTick": 0
+    },
+    "income": { "amount": 5, "intervalTicks": 10 }
+  },
+  "zones": [
+    {
+      "id": "alpha",
+      "center": { "x": 0, "y": 0 },
+      "radius": 10,
+      "initialOwner": null
+    },
+    {
+      "id": "beta",
+      "center": { "x": 50, "y": 0 },
+      "radius": 15,
+      "initialOwner": "red",
+      "capture": { "threshold": 200 },
+      "income": { "amount": 20 }
+    }
+  ]
+}
