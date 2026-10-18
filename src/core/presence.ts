@@ -46,8 +46,17 @@ export function resolvePresence(
   for (const player of players) {
     const dx = player.position.x - center.x;
     const dy = player.position.y - center.y;
-    // hypot avoids overflow/underflow when squaring valid but extreme coordinates.
-    if (Math.hypot(dx, dy) <= radius)
+    const distanceSquared = dx * dx + dy * dy;
+    const radiusSquared = radius * radius;
+    // Squared distances keep integer boundary points exact. Fall back to hypot
+    // when squares overflow or the squared radius enters the subnormal range.
+    const inside =
+      Number.isFinite(distanceSquared) &&
+      Number.isFinite(radiusSquared) &&
+      radiusSquared >= 2 ** -1022
+        ? distanceSquared <= radiusSquared
+        : Math.hypot(dx, dy) <= radius;
+    if (inside)
       counts.set(player.factionId, (counts.get(player.factionId) ?? 0) + 1);
   }
   return Object.fromEntries(

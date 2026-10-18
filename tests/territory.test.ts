@@ -198,17 +198,37 @@ describe('capture and presence', () => {
     ]);
   });
 
-  it('handles extreme finite geometry without squared-distance overflow', () => {
+  it.each([
+    [99, 168, 195],
+    [21, 220, 221],
+  ])('includes boundary point (%i, %i) at radius %i', (x, y, radius) => {
     const { put, run, zone } = setup({
-      zones: [{ ...config().zones[0]!, radius: 1e200 }],
+      zones: [{ ...config().zones[0]!, radius }],
     });
-    put('far', 'red', 2e200);
+    put('edge', 'blue', x, y);
+    put('outside', 'red', x, y + 0.001);
     run(1);
-    expect(zone().factionsPresent).toEqual({});
-    put('far', 'red', 1e200);
-    run(1);
-    expect(zone().factionsPresent).toEqual({ red: 1 });
+    expect(zone()).toMatchObject({
+      progress: 10,
+      isContested: false,
+      factionsPresent: { blue: 1 },
+    });
   });
+
+  it.each([1e200, 1e-200])(
+    'handles extreme radius %s without squared-distance overflow or underflow',
+    (radius) => {
+      const { put, run, zone } = setup({
+        zones: [{ ...config().zones[0]!, radius }],
+      });
+      put('far', 'red', 2 * radius);
+      run(1);
+      expect(zone().factionsPresent).toEqual({});
+      put('far', 'red', radius);
+      run(1);
+      expect(zone().factionsPresent).toEqual({ red: 1 });
+    },
+  );
 
   it('caps large safe gains without an unsafe intermediate sum', () => {
     const { put, run, zone } = setup({
