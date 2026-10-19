@@ -283,6 +283,16 @@ describe('ownership and income', () => {
       expect(system.getFactionScores().blue).toBeUndefined();
       run(1);
       expect(system.getFactionScores().blue).toBe(5);
+
+      const previousRedBalance = system.getFactionScores().red;
+      put('b', 'red');
+      run(2);
+      expect(zone().ownerId).toBe('red');
+      expect(system.getFactionScores().red).toBe(previousRedBalance);
+      run(intervalTicks - 1);
+      expect(system.getFactionScores().red).toBe(previousRedBalance);
+      run(1);
+      expect(system.getFactionScores().red).toBe((previousRedBalance ?? 0) + 5);
     },
   );
 
@@ -473,14 +483,37 @@ describe('events', () => {
       zones: [...c.zones, { ...c.zones[0]!, id: 'b' }],
     });
     const journal: string[] = [];
+    const captures: TerritoryEvents['zoneCaptured'][] = [];
+    const changes: TerritoryEvents['ownerChanged'][] = [];
     system.on('zoneCaptured', (e) => {
       journal.push(`${e.zoneId}:capture`);
+      captures.push(e);
       expect(system.getZones().every((z) => z.ownerId === 'blue')).toBe(true);
     });
-    system.on('ownerChanged', (e) => journal.push(`${e.zoneId}:owner`));
+    system.on('ownerChanged', (e) => {
+      journal.push(`${e.zoneId}:owner`);
+      changes.push(e);
+    });
     put('p');
     run(1);
     expect(journal).toEqual(['a:capture', 'a:owner', 'b:capture', 'b:owner']);
+    expect(captures).toEqual(
+      ['a', 'b'].map((zoneId) => ({
+        tick: 1,
+        zoneId,
+        factionId: 'blue',
+        previousOwnerId: 'red',
+      })),
+    );
+    expect(changes).toEqual(
+      ['a', 'b'].map((zoneId) => ({
+        tick: 1,
+        zoneId,
+        previousOwnerId: 'red',
+        ownerId: 'blue',
+        reason: 'capture',
+      })),
+    );
   });
 
   it('isolates payload fields and nested arrays, including retained references', () => {
@@ -517,6 +550,15 @@ describe('events', () => {
       put('new', 'blue');
       calls++;
     });
+    const observed: {
+      tick: number;
+      ownerId: string | null;
+      progress: number;
+    }[] = [];
+    system.on('ownerChanged', () => {
+      const { ownerId, progress } = zone();
+      observed.push({ tick: system.currentTick, ownerId, progress });
+    });
     system.setOwner('a', 'red');
     expect(zone().factionsPresent).toEqual({});
     run(1);
@@ -524,6 +566,10 @@ describe('events', () => {
     run(9);
     expect(calls).toBe(2);
     expect(zone().ownerId).toBe('blue');
+    expect(observed).toEqual([
+      { tick: 0, ownerId: 'red', progress: 0 },
+      { tick: 10, ownerId: 'blue', progress: 0 },
+    ]);
   });
 
   it('continues after listener and error callback failures, releasing the guard', () => {
