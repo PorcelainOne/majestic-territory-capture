@@ -23,7 +23,7 @@ npm run demo
 - Внешний `PlayerRegistry` реализует `IPlayerSource`: ядро читает и проверяет снимок игроков в начале тика. Демо и тесты управляют реестром, ядро от них не зависит.
 - `EventBus` рассылает события после фиксации; каждый подписчик получает отдельную глубокую копию payload.
 
-Публичные классы и типы экспортируются из `src/index.ts`:
+Публичные классы и типы экспортируются из `src/index.ts`. Пример ниже сохраните в `example.ts` в корне репозитория и запустите командой `npx tsx example.ts`:
 
 ```ts
 import { TerritorySystem, PlayerRegistry } from './src/index.js';
@@ -46,7 +46,7 @@ for (let i = 0; i < 10; i++) system.tick();
 console.log(system.getZone('alpha'));
 ```
 
-`getZones()` и `getZone(id)` возвращают копии (`null` для неизвестной зоны). `setOwner(id, factionId | null)` вручную меняет владельца; неизвестный id вызывает `UnknownZoneError`. Повторная установка того же владельца ничего не меняет. `getFactionScores()` возвращает копию балансов, `currentTick` — номер завершённого тика. `players.upsert()` добавляет игрока или меняет его фракцию/позицию; `remove()` возвращает `false`, если игрок уже отсутствует.
+`getZones()` и `getZone(id)` возвращают копии (`null` для неизвестной зоны). `setOwner(id, factionId | null)` вручную меняет владельца; неизвестный id вызывает `UnknownZoneError`, а фракция, не являющаяся непустой строкой или `null`, — `TypeError`. Повторная установка того же владельца ничего не меняет. `getFactionScores()` возвращает копию балансов, `currentTick` — номер завершённого тика. `players.upsert()` добавляет игрока или меняет его фракцию/позицию; `remove()` возвращает `false`, если игрок уже отсутствует.
 
 `on(event, handler)` возвращает функцию отписки. События: `zoneCaptured`, `ownerChanged`, `contestStarted`, `contestEnded`, `incomeGranted`. Порядок — зоны по конфигу, внутри зоны: оспаривание → захват → смена владельца → доход. Payload описывает переход, чтение API показывает итог всего тика.
 
@@ -92,7 +92,7 @@ console.log(system.getZone('alpha'));
 
 ## Конфигурация и добавление зоны
 
-Пример — `config/zones.json`. Для новой зоны достаточно добавить запись в `zones`, ядро менять не требуется:
+Пример — `config/zones.json`. Для новой зоны достаточно добавить запись в `zones`, ядро менять не требуется. Поля `id`, `center`, `radius` и `initialOwner` обязательны; для нейтральной зоны явно укажите `initialOwner: null`:
 
 ```json
 {
