@@ -4,7 +4,12 @@ import { TerritorySystem, PlayerRegistry } from '../index.js';
 import type { SimulationConfig, IZoneState } from '../index.js';
 
 export function runDemo(
-  report: (stage: string, tick: number, zones: IZoneState[]) => void = () => {},
+  report: (
+    stage: string,
+    tick: number,
+    zones: IZoneState[],
+    scores: Record<string, number>,
+  ) => void = () => {},
 ): TerritorySystem {
   const config = JSON.parse(
     readFileSync(new URL('../../config/zones.json', import.meta.url), 'utf8'),
@@ -22,7 +27,12 @@ export function runDemo(
     return state;
   };
   const show = (stage: string) =>
-    report(stage, system.currentTick, system.getZones());
+    report(
+      stage,
+      system.currentTick,
+      system.getZones(),
+      system.getFactionScores(),
+    );
   const captures: string[] = [];
   system.on('zoneCaptured', ({ factionId }) => captures.push(factionId));
   put('r1', 'red');

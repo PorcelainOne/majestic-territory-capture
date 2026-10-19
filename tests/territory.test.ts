@@ -618,7 +618,12 @@ describe('events', () => {
 
 describe('delivery scenarios', () => {
   it('runs the real demo assertions', () => {
-    expect(runDemo().getZone('alpha')?.ownerId).toBe('green');
+    const report = vi.fn();
+    expect(runDemo(report).getZone('alpha')?.ownerId).toBe('green');
+    expect(report).toHaveBeenCalledWith('Доход', 36, expect.any(Array), {
+      red: 65,
+      blue: 5,
+    });
   });
 
   it('adds a working zone solely through configuration', () => {

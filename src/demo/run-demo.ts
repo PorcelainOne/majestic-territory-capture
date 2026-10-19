@@ -1,7 +1,7 @@
 import { runDemo } from './scenario.js';
 
 try {
-  runDemo((stage, tick, zones) => {
+  runDemo((stage, tick, zones, scores) => {
     console.log(`\n${stage} — тик ${tick}`);
     console.table(
       zones.map(
@@ -13,6 +13,13 @@ try {
           isContested,
         }),
       ),
+    );
+    console.log('Балансы фракций:');
+    console.table(
+      Object.entries(scores).map(([factionId, balance]) => ({
+        factionId,
+        balance,
+      })),
     );
   });
   console.log('\nВсе проверки демо пройдены.');
