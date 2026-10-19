@@ -286,12 +286,20 @@ describe('ownership and income', () => {
 
       const previousRedBalance = system.getFactionScores().red;
       put('b', 'red');
-      run(2);
+      run(1);
+      const previousBlueBalance = system.getFactionScores().blue;
+      expect(previousBlueBalance).toBe(intervalTicks === 1 ? 10 : 5);
+      run(1);
       expect(zone().ownerId).toBe('red');
+      expect(system.getFactionScores().blue).toBe(previousBlueBalance);
       expect(system.getFactionScores().red).toBe(previousRedBalance);
-      run(intervalTicks - 1);
+      for (let i = 1; i < intervalTicks; i++) {
+        run(1);
+        expect(system.getFactionScores().blue).toBe(previousBlueBalance);
+      }
       expect(system.getFactionScores().red).toBe(previousRedBalance);
       run(1);
+      expect(system.getFactionScores().blue).toBe(previousBlueBalance);
       expect(system.getFactionScores().red).toBe((previousRedBalance ?? 0) + 5);
     },
   );
